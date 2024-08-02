@@ -41,14 +41,14 @@ disaster_keywords = {
 
 uploaded_file = st.file_uploader("Choose a CSV file", type='csv')
 
-if uploaded_file is not None:  # fix: 'none' should be 'None'
+if uploaded_file is not None:  # fix: 'none' should be 'none'
     try:
         df = pd.read_csv(uploaded_file)
 
-        st.write("Here's the data from your CSV file:")
+        st.write("here's the data from your csv file:")
         st.write(df)
 
-        if 'text' in df.columns and 'date' in df.columns:  # Ensure 'date' column exists
+        if 'text' in df.columns and 'date' in df.columns:  # ensure 'date' column exists
             filtered_results = []
 
             for location in location_keywords:
@@ -58,28 +58,30 @@ if uploaded_file is not None:  # fix: 'none' should be 'None'
                 if not location_filtered_df.empty:
                     for index, row in location_filtered_df.iterrows():
                         tweet_text = row['text'].lower()
-                        identified_needs = None
-                        identified_disaster_type = 'Unknown'
+                        identified_disaster_type = 'unknown'
 
-                        # Check needs keywords
+                        # Store multiple identified needs
+                        identified_needs_list = []
+
+                        # check needs keywords
                         for need, keywords in needs_keywords.items():
                             if any(keyword in tweet_text for keyword in keywords):
-                                identified_needs = need  # store the identified need
-                                break
+                                identified_needs_list.append(need)  # Store all identified needs
 
-                        # Check disaster type
+                        # check disaster type
                         for disaster_type, keywords in disaster_keywords.items():
                             if any(k in tweet_text for k in keywords):
                                 identified_disaster_type = disaster_type
                                 break
 
-                        if identified_needs:
+                        # Record results for each identified need
+                        for identified_needs in identified_needs_list:
                             filtered_results.append({
                                 'Location': location,
                                 'Disaster Type': identified_disaster_type,
                                 'Needs': identified_needs,
                                 'Tweet Snippets': row['text'],
-                                'Date': row['date']
+                                'date': row['date']
                             })
 
             if filtered_results:
