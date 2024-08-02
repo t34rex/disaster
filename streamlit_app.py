@@ -45,7 +45,7 @@ if uploaded_file is not None:  # fix: 'none' should be 'none'
     try:
         df = pd.read_csv(uploaded_file)
 
-        st.write("here's the data from your csv file:")
+        st.write("Here's the data from your CSV file:")
         st.write(df)
 
         if 'text' in df.columns and 'date' in df.columns:  # ensure 'date' column exists
