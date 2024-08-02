@@ -131,6 +131,9 @@ if uploaded_file is not None:  # fix: 'none' should be 'None'
                 stats_df = results_df.groupby(['Disaster Type', 'Needs']).size().reset_index(name='Count')
                 st.subheader("Statistics of Needs by Disaster Type")
                 st.write(stats_df)
+
+                st.subheader("Pie Chart of Distribution of Needs in Disasters")
+
                 # Pie Chart
                 for disaster in stats_df['Disaster Type'].unique():
                     data = stats_df[stats_df['Disaster Type'] == disaster]
