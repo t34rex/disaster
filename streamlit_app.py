@@ -6,7 +6,16 @@ import seaborn as sns
 
 st.title("DiRA: Disaster Response Assistance")
 st.write("A Decision Support System for better Disaster Response Management.")
-st.write("Upload a CSV file for analysis.")
+
+st.subheader("Instructions for Use:")
+st.markdown("""
+- Upload a CSV file for analysis.
+- CSV file should have a column named **'text'** containing tweets and **'date'** containing the dates.
+""")
+st.write("Sample CSV file format:")
+st.image('images/sample.png', use_column_width=True)
+
+
 
 location_keywords = ['Abra', 'Agusan Del Norte', 'Agusan Del Sur', 'Aklan', 'Albay',
         'Antique', 'Apayao', 'Aurora', 'Basilan', 'Bataan', 'Batanes', 'Batangas', 'Benguet', 'Biliran',
