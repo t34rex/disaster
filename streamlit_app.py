@@ -8,9 +8,11 @@ st.title("DiRA: Disaster Response Assistance")
 st.write("A Decision Support System for better Disaster Response Management.")
 
 st.subheader("Instructions for Use:")
+st.write("Upload a CSV file for analysis.")
 st.markdown("""
-- Upload a CSV file for analysis.
-- CSV file should have a column named **'text'** containing tweets and **'date'** containing the dates.
+Your CSV file should contain these two columns:
+- **text**: This column should include the full text of each tweet.
+- **date**: This column should specify the date when the tweet was created.
 """)
 st.write("Sample CSV file format:")
 st.image('images/sample.png', use_column_width=True)
