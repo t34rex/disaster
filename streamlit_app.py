@@ -1,8 +1,23 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from math import pi
 import seaborn as sns
+from math import pi
+import nltk
+import string
+import re
+import gensim
+from gensim import corpora
+from gensim.models import LdaModel
+from stopwordsiso import stopwords
+from nltk.stem import WordNetLemmatizer
+import random
+
+# Download NLTK resources
+nltk.download('wordnet')
+nltk.download('omw-1.4')
+nltk.download('punkt')
+nltk.download('stopwords')
 
 st.title("DiRA: Disaster Response Assistance")
 st.write("A Decision Support System for better Disaster Response Management.")
@@ -184,8 +199,146 @@ if uploaded_file is not None:  # fix: 'none' should be 'none'
 
             else:
                 st.warning("No tweets found matching the specified criteria.")
+        if 'text' in df.columns and 'date' in df.columns:
+            # Preprocess the text data
+            tweets = df['text'].tolist()
+
+            # Define stopwords
+            english_stopwords = stopwords("en")
+            tagalog_stopwords = stopwords("tl")
+            all_stopwords = english_stopwords | tagalog_stopwords
+
+            # Preprocessing function
+            def preprocess_text(text):
+                needs_keywords = ["food", "water", "shelter", "medicine", "medical",
+                                  "police", "electricity", "power", "hospital",
+                                  'gamot', 'pagkain', 'house', 'bahay', 'damit', 'repair',
+                                  'sanitation', 'tubig', 'hygiene', 'clean', 'bigas', 'rice',
+                                  'clothing', 'clothes', 'tubig', 'gutom', 'relief', 'tulong',
+                                  'emergency', 'help', 'evacuation', 'need', 'donation']
+                if not any(keyword in text.lower() for keyword in needs_keywords):
+                    return None
+                text = text.lower()
+                text = re.sub(r'http\s+', '', text)
+                text = re.sub(r'#\w+', '', text)
+                text = re.sub(r'@\w+', '', text)
+                text = re.sub(r'\d+', '', text)
+                text = text.encode('ascii', 'ignore').decode('ascii')
+                text = text.translate(str.maketrans('', '', string.punctuation))
+
+                tokens = nltk.word_tokenize(text)
+                tokens = [word for word in tokens if word not in all_stopwords]
+                lemmatizer = WordNetLemmatizer()
+                tokens = [lemmatizer.lemmatize(word) for word in tokens if len(word) > 2]
+
+                return ' '.join(tokens)
+
+            # Filter tweets
+            needs_filtered_tweets = [preprocess_text(tweet) for tweet in tweets]
+            needs_filtered_tweets = [tweet for tweet in needs_filtered_tweets if tweet]
+
+            # Create dictionary and corpus
+            def create_dictionary(texts):
+                tokenized_texts = [text.split() for text in texts if text is not None]
+                dictionary = corpora.Dictionary(tokenized_texts)
+                stop_ids = [dictionary.token2id[stopword] for stopword in tagalog_stopwords if stopword in dictionary.token2id]
+                dictionary.filter_tokens(stop_ids)
+                corpus = [dictionary.doc2bow(text) for text in tokenized_texts]
+                return dictionary, corpus
+
+            dictionary, corpus = create_dictionary(needs_filtered_tweets)
+
+            # Train the LDA model
+            num_topics = 8
+            lda_model = LdaModel(corpus, id2word=dictionary, num_topics=num_topics, passes=10, iterations=50, alpha=0.8, eta=0.8)
+
+            # Summarize topics
+            def summarize_topic(topic_words):
+                needs_categories = {
+                    'drinking water': ['tubig', 'water', 'inumin', 'bottled water', 'purified water'],
+                    'food': ['food', 'pagkain', 'ulam', 'relief goods', 'rice', 'canned goods', 'bigas'],
+                    'shelter': ['shelter', 'evacuation', 'bahay', 'tirahan', 'house'],
+                    'cash assistance': ['cash', 'fund', 'pera', 'money', 'cash donation'],
+                    'clothes': ['clothes', 'damit', 'clothing', 'blanket'],
+                    'hygiene kits': ['sabon', 'toothpaste', 'soap', 'shampoo', 'panglaba', 'panlaba', 'toothbrush', 'hygiene', 'hygiene kits', 'clean water']
+                }
+
+                templates = {
+                    'drinking water': ["There is a critical shortage of clean drinking water.",
+                                      "Access to safe drinking water is limited.",
+                                      "Residents are in urgent need of potable water.",
+                                      "Bottled water and water purification supplies are essential."],
+                    'food': [
+                        "Food supplies are insufficient to meet the needs of the affected population.",
+                        "There is a pressing need for food assistance, including {} and {}.",  # Placeholder for specific food items
+                        "Malnutrition is a growing concern due to lack of adequate food.",
+                        "Food distribution systems have been disrupted."
+                    ],
+                    'shelter': [
+                        "There is a critical shortage of shelter for displaced individuals.",
+                        "Temporary housing solutions are urgently needed.",
+                        "Many homes have been damaged or destroyed.",
+                        "Evacuation centers are overcrowded."
+                    ],
+                    'cash assistance': [
+                        "Financial assistance is crucial for recovery efforts.",
+                        "Cash aid can help people meet their immediate needs.",
+                        "Economic support is essential for rebuilding livelihoods.",
+                        "There is a need for cash assistance programs."
+                    ],
+                    'clothes': [
+                        "Clothing and blankets are urgently needed for affected populations.",
+                        "Many people have lost their clothing due to the disaster.",
+                        "There is a shortage of essential clothing items.",
+                        "Warm clothing is required for those in cold weather conditions."
+                    ],
+                    'hygiene kits': [
+                        "Proper hygiene is essential to prevent the spread of diseases.",
+                        "There is a critical need for hygiene kits and supplies.",
+                        "Sanitation facilities are inadequate and need improvement.",
+                        "Personal hygiene products are essential for affected populations."
+                    ],
+                }
+
+                general_template = {
+                    'general': [
+                        "This topic addresses a wide range of needs related to disaster recovery.",
+                        "The affected population requires comprehensive assistance.",
+                        "There is a need for coordinated response efforts.",
+                        "Long-term recovery and rehabilitation are essential."
+                    ]
+                }
+
+                identified_needs = []
+                for category, keywords in needs_categories.items():
+                    if any(keyword in topic_words for keyword in keywords):
+                        identified_needs.append(category)
+
+                if identified_needs:
+                    summary_parts = []
+                    for need in identified_needs:
+                        relevant_words = [word for word in topic_words if word in needs_categories[need]]
+                        template = random.choice(templates[need])
+                        if len(relevant_words) >= 2:
+                            summary_part = template.format(*relevant_words[:2])
+                        elif relevant_words:
+                            summary_part = template.format(relevant_words[0]) if '{}' in template else template
+                        else:
+                            summary_part = template
+                        summary_parts.append(summary_part)
+                    summary = " ".join(summary_parts)
+                else:
+                    summary = random.choice(general_template['general'])
+
+                return summary
+
+            st.subheader("Topic Summaries:")
+            for k in range(num_topics):
+                topic_words = [word for word, _ in lda_model.show_topic(k, topn=10)]
+                summary = summarize_topic(topic_words)
+                st.write(f'Topic #{k + 1} Summary: {summary}')
         else:
-            st.error("The uploaded csv file must contain both 'text' and 'date' columns.")
+            st.error("The uploaded CSV file must contain both 'text' and 'date' columns.")
     except Exception as e:
         st.error(f"An error occurred while reading the file: {e}")
 else:
