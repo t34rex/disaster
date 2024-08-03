@@ -17,7 +17,6 @@ import random
 nltk.download('wordnet')
 nltk.download('omw-1.4')
 nltk.download('punkt')
-nltk.download('stopwords')
 
 st.title("DiRA: Disaster Response Assistance")
 st.write("A Decision Support System for better Disaster Response Management.")
