@@ -210,11 +210,16 @@ if uploaded_file is not None:  # fix: 'none' should be 'none'
             # Preprocessing function
             def preprocess_text(text):
                 needs_keywords = ["food", "water", "shelter", "medicine", "medical",
-                                  "police", "electricity", "power", "hospital",
-                                  'gamot', 'pagkain', 'house', 'bahay', 'damit', 'repair',
-                                  'sanitation', 'tubig', 'hygiene', 'clean', 'bigas', 'rice',
-                                  'clothing', 'clothes', 'tubig', 'gutom', 'relief', 'tulong',
-                                  'emergency', 'help', 'evacuation', 'need', 'donation']
+                      "police", "electricity", "power", "hospital",
+                      'gamot', 'pagkain', 'house', 'bahay', 'damit', 'repair',
+                      'sanitation', 'tubig', 'hygiene', 'clean', 'bigas', 'rice',
+                      'clothing', 'clothes', 'tubig', 'gutom', 'relief', 'tulong',
+                      'emergency', 'help', 'evacuation', 'need', 'donation', 
+                      "communication", "rescue", "safety", "security", "protection", 
+                      "law enforcement", "relief", "aid", "assistance", "support", 
+                      "donation", "volunteer", "damage", "destruction", "repair", 
+                      "reconstruction", "rehabilitation", "development", "information", 
+                      "awareness", "preparedness", "response", "recovery"]
                 if not any(keyword in text.lower() for keyword in needs_keywords):
                     return None
                 text = text.lower()
