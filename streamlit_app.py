@@ -12,6 +12,7 @@ from gensim.models import LdaModel
 from stopwordsiso import stopwords
 from nltk.stem import WordNetLemmatizer
 import random
+from wordcloud import WordCloud
 
 # Download NLTK resources
 nltk.download('wordnet')
@@ -256,6 +257,26 @@ if uploaded_file is not None:  # fix: 'none' should be 'none'
             num_topics = 8
             lda_model = LdaModel(corpus, id2word=dictionary, num_topics=num_topics, passes=10, iterations=50, alpha=0.8, eta=0.8)
 
+            topic_words = []
+            # num_topics should be set to the number of topics the LDA model was trained on
+            num_topics_trained = lda_model.num_topics
+            for i in range(num_topics_trained):
+                topic_words.append(lda_model.show_topic(i, topn=10))
+
+            st.subheader('Word Cloud for Tweet Topics')
+
+            # Create and display word clouds
+            for i, topic in enumerate(topic_words):
+                word_dict = {word: abs(weight) for word, weight in topic}
+                cloud = WordCloud(background_color='white').generate_from_frequencies(word_dict)  # Correct instantiation of WordCloud
+                plt.figure(figsize=(8, 5))  # Create a new figure for each topic
+                plt.title(f"Topic {i + 1}")  # Set title for each topic
+                plt.imshow(cloud, interpolation='bilinear')  # Use interpolation for better rendering
+                plt.axis("off")  # Hide axes
+
+                st.pyplot(plt)  # Display the word cloud in Streamlit
+                plt.clf() 
+
             # Summarize topics
             def summarize_topic(topic_words):
                 needs_categories = {
@@ -336,7 +357,7 @@ if uploaded_file is not None:  # fix: 'none' should be 'none'
 
                 return summary
 
-            st.subheader("Topic Summaries:")
+            st.subheader("Tweet Topic Summaries:")
             for k in range(num_topics):
                 topic_words = [word for word, _ in lda_model.show_topic(k, topn=10)]
                 summary = summarize_topic(topic_words)
