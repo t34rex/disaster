@@ -68,7 +68,7 @@ disaster_keywords = {
 
 uploaded_file = st.file_uploader("Choose a CSV file", type='csv')
 
-if uploaded_file is not None:  # fix: 'none' should be 'none'
+if uploaded_file is not None: 
     try:
         df = pd.read_csv(uploaded_file)
 
@@ -79,7 +79,7 @@ if uploaded_file is not None:  # fix: 'none' should be 'none'
             filtered_results = []
 
             for location in location_keywords:
-                location_condition = df['text'].str.contains(location, case=False, na=False)  # case issue fixed
+                location_condition = df['text'].str.contains(location, case=False, na=False) 
                 location_filtered_df = df[location_condition]
 
                 if not location_filtered_df.empty:
@@ -112,7 +112,7 @@ if uploaded_file is not None:  # fix: 'none' should be 'none'
                             })
 
             if filtered_results:
-                results_df = pd.DataFrame(filtered_results)  # corrected typo from dataframe to DataFrame
+                results_df = pd.DataFrame(filtered_results)  
                 st.subheader("Results")
                 st.write(results_df)
 
@@ -268,13 +268,13 @@ if uploaded_file is not None:  # fix: 'none' should be 'none'
             # Create and display word clouds
             for i, topic in enumerate(topic_words):
                 word_dict = {word: abs(weight) for word, weight in topic}
-                cloud = WordCloud(background_color='white').generate_from_frequencies(word_dict)  # Correct instantiation of WordCloud
+                cloud = WordCloud(background_color='white').generate_from_frequencies(word_dict)  
                 plt.figure(figsize=(8, 5))  # Create a new figure for each topic
-                plt.title(f"Topic {i + 1}")  # Set title for each topic
-                plt.imshow(cloud, interpolation='bilinear')  # Use interpolation for better rendering
+                plt.title(f"Topic {i + 1}")  
+                plt.imshow(cloud, interpolation='bilinear') 
                 plt.axis("off")  # Hide axes
 
-                st.pyplot(plt)  # Display the word cloud in Streamlit
+                st.pyplot(plt) 
                 plt.clf() 
 
             # Summarize topics
@@ -369,4 +369,3 @@ if uploaded_file is not None:  # fix: 'none' should be 'none'
 else:
     st.info("Please upload a CSV file.")
 
-#comment for redeployment
